@@ -2,6 +2,7 @@
  * @file fis-conf.js 配置
  */
 const path = require('path');
+const package = require('./package.json');
 const parserMarkdown = require('./build/md-parser');
 fis.get('project.ignore').push(
     'public/**',
@@ -33,6 +34,28 @@ fis.match('*.scss', {
     rExt: '.css'
 });
 
+fis.match('/src/icons/**.svg', {
+    rExt: '.js',
+    isJsXLike: true,
+    isJsLike: true,
+    isMod: true,
+    parser: [
+        fis.plugin('svgr', {
+            svgProps: {
+                className: "icon"
+            },
+            prettier: false,
+            dimensions: false
+        }),
+        fis.plugin('typescript', {
+            importHelpers: true,
+            esModuleInterop: true,
+            experimentalDecorators: true,
+            sourceMap: false
+        })
+    ]
+})
+
 fis.match('_*.scss', {
     release: false
 });
@@ -60,6 +83,12 @@ fis.match('/docs/**.md', {
         });
     }],
     isMod: true
+});
+
+fis.on('compile:parser', function (file) {
+    if (file.subpath === '/src/index.tsx') {
+        file.setContent(file.getContent().replace('@version', package.version));
+    }
 });
 
 fis.match('{*.ts,*.jsx,*.tsx,/src/**.js,/src/**.ts}', {
@@ -187,7 +216,7 @@ if (fis.project.currentMedia() === 'publish') {
             to: fis.get('options.d') || fis.get('options.desc') || './lib'
         })
     });
-    publishEnv.match('/src/**.{jsx,tsx,js,ts}', {
+    publishEnv.match('/src/**.{jsx,tsx,js,ts,svg}', {
         isMod: false,
         standard: false
     });
@@ -224,6 +253,9 @@ if (fis.project.currentMedia() === 'publish') {
                         .replace(/('|")(\.\.\/thirds.*?)\1/g, function (_, quote, value) {
                             return '__uri(' + quote + value + quote + ')';
                         });
+                } else if (subpath === '/src/components/icons.tsx') {
+                    content = content
+                        .replace(/\.svg/g, ".js")
                 } else {
                     content = content.replace(/@require\s+(?:\.\.\/)?node_modules\//g, '@require ');
                 }
@@ -290,6 +322,13 @@ if (fis.project.currentMedia() === 'publish') {
     });
 
     env.match('*.{js,jsx,ts,tsx}', {
+        optimizer: fis.plugin('uglify-js'),
+        moduleId: function (m, path) {
+            return fis.util.md5('amis-sdk' + path);
+        },
+    });
+    
+    env.match('/src/icons/**.svg', {
         optimizer: fis.plugin('uglify-js'),
         moduleId: function (m, path) {
             return fis.util.md5('amis-sdk' + path);

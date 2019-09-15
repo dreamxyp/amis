@@ -127,7 +127,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
         silentPolling: false,
         filterTogglable: false,
         filterDefaultVisible: true,
-        loadDataOnce: false,
+        loadDataOnce: false
     };
 
     control: any;
@@ -274,7 +274,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                 nextIndex: idx + 1,
                 hasPrev: idx > 0,
                 prevIndex: idx - 1,
-                index: idx,
+                index: idx
             });
         } else if (action.actionType === 'ajax') {
             const data = ctx;
@@ -285,7 +285,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             return store
                 .saveRemote(action.api, data, {
                     successMessage: (action.messages && action.messages.success) || (messages && messages.saveSuccess),
-                    errorMessage: (action.messages && action.messages.failed) || (messages && messages.saveFailed),
+                    errorMessage: (action.messages && action.messages.failed) || (messages && messages.saveFailed)
                 })
                 .then(async (payload: object) => {
                     const data = createObject(ctx, payload);
@@ -301,7 +301,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                 .catch(() => {});
         } else if (pickerMode && (action.actionType === 'confirm' || action.actionType === 'submit')) {
             return Promise.resolve({
-                items: store.selectedItems.concat(),
+                items: store.selectedItems.concat()
             });
         } else {
             onAction(e, action, ctx);
@@ -325,7 +325,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             rows: selectedItems,
             items: selectedItems,
             unSelectedItems: unSelectedItems,
-            ids,
+            ids
         });
 
         if (action.actionType === 'dialog') {
@@ -333,7 +333,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                 e,
                 {
                     ...action,
-                    __from: 'bulkAction',
+                    __from: 'bulkAction'
                 },
                 ctx
             );
@@ -341,8 +341,9 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             isEffectiveApi(action.api, ctx) &&
                 store
                     .saveRemote(action.api as string, ctx, {
-                        successMessage: (action.messages && action.messages.success) || (messages && messages.saveSuccess),
-                        errorMessage: (action.messages && action.messages.failed) || (messages && messages.saveFailed),
+                        successMessage:
+                            (action.messages && action.messages.success) || (messages && messages.saveSuccess),
+                        errorMessage: (action.messages && action.messages.failed) || (messages && messages.saveFailed)
                     })
                     .then(async () => {
                         if (action.feedback && isVisible(action.feedback, store.data)) {
@@ -371,7 +372,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             {
                 ...defaultParams,
                 ...values,
-                ...store.query,
+                ...store.query
             },
             false,
             true,
@@ -384,7 +385,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
 
         pickerMode &&
             store.updateData({
-                items: options || [],
+                items: options || []
             });
 
         // 只执行一次。
@@ -416,7 +417,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
         store.updateQuery(
             {
                 ...values,
-                [pageField || 'page']: jumpToFirstPage ? 1 : store.page,
+                [pageField || 'page']: jumpToFirstPage ? 1 : store.page
             },
             syncLocation && env && env.updateLocation
                 ? (location: any) => env.updateLocation(location, replaceLocation)
@@ -458,11 +459,14 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             return this.handleAction(
                 undefined,
                 {
-                    ...dialogAction,
+                    ...dialogAction
                 },
-                createObject(store.data.items[ctx.nextIndex], {
-                    index: ctx.nextIndex,
-                })
+                createObject(
+                    createObject(store.data, {
+                        index: ctx.nextIndex
+                    }),
+                    store.data.items[ctx.nextIndex]
+                )
             );
         } else if (
             action.actionType === 'prev' &&
@@ -472,11 +476,14 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             return this.handleAction(
                 undefined,
                 {
-                    ...dialogAction,
+                    ...dialogAction
                 },
-                createObject(store.data.items[ctx.prevIndex], {
-                    index: ctx.prevIndex,
-                })
+                createObject(
+                    createObject(store.data, {
+                        index: ctx.prevIndex
+                    }),
+                    store.data.items[ctx.prevIndex]
+                )
             );
         } else if (values.length) {
             const value = values[0];
@@ -486,7 +493,9 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             if (component && component.props.type === 'form') {
                 // 数据保存了，说明列表数据已经无效了，重新刷新。
                 if (value && (value as any).__saved) {
-                    this.search(dialogAction.__from ? {[pageField || 'page']: 1} : undefined, undefined, true);
+                    // 配置了 reload 则跳过自动更新。
+                    dialogAction.reload ||
+                        this.search(dialogAction.__from ? {[pageField || 'page']: 1} : undefined, undefined, true);
                 } else if (
                     value &&
                     ((value.hasOwnProperty('items') && (value as any).items) || value.hasOwnProperty('ids')) &&
@@ -517,7 +526,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             store.setCurrentAction({
                 type: 'button',
                 actionType: 'dialog',
-                dialog: dialog,
+                dialog: dialog
             });
             store.openDialog(ctx, undefined, confirmed => {
                 resolve(confirmed);
@@ -567,8 +576,8 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             );
         this.lastQuery = store.query;
         const data = createObject(store.data, store.query);
-        isEffectiveApi(api, data) &&
-            store
+        isEffectiveApi(api, data) 
+            ? store
                 .fetchInitData(api, data, {
                     successMessage: messages && messages.fetchSuccess,
                     errorMessage: messages && messages.fetchFailed,
@@ -580,7 +589,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                     pageField,
                     perPageField,
                     loadDataMode,
-                    syncResponse2Query,
+                    syncResponse2Query
                 })
                 .then(value => {
                     interval &&
@@ -595,7 +604,8 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                             Math.max(interval, 3000)
                         ));
                     return value;
-                });
+                })
+            : source && store.initFromScope(data, source);
     }
 
     silentSearch(values?: object) {
@@ -606,7 +616,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
         const {store, syncLocation, env, pageField, perPageField, autoJumpToTopOnPagerChange} = this.props;
 
         let query: any = {
-            [pageField || 'page']: page,
+            [pageField || 'page']: page
         };
 
         if (perPage) {
@@ -645,7 +655,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             const data: any = createObject(store.data, {
                 rows,
                 rowsDiff: diff,
-                indexes: indexes,
+                indexes: indexes
             });
 
             if (rows.length && rows[0].hasOwnProperty(primaryField || 'id')) {
@@ -659,7 +669,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             store
                 .saveRemote(quickSaveApi, data, {
                     successMessage: messages && messages.saveFailed,
-                    errorMessage: messages && messages.saveSuccess,
+                    errorMessage: messages && messages.saveSuccess
                 })
                 .then(() => {
                     reload && this.reloadTarget(reload, data);
@@ -674,7 +684,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
 
             const data = createObject(store.data, {
                 item: rows,
-                modified: diff,
+                modified: diff
             });
 
             const sendData = createObject(data, rows);
@@ -753,7 +763,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             const start = (store.page - 1) * store.perPage || 0;
             rows = rows.map((item, key) =>
                 extendObject(item, {
-                    [orderField]: start + key + 1,
+                    [orderField]: start + key + 1
                 })
             );
         }
@@ -824,7 +834,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
         store.updateQuery(
             {
                 ...values,
-                [pageField || 'page']: 1,
+                [pageField || 'page']: 1
             },
             syncLocation && env && env.updateLocation ? env.updateLocation : undefined,
             pageField,
@@ -899,7 +909,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             bulkBtns = bulkActions
                 .map(item => ({
                     ...item,
-                    ...getExprProperties(item as Schema, ctx),
+                    ...getExprProperties(item as Schema, ctx)
                 }))
                 .filter(item => !item.hidden && item.visible !== false);
         }
@@ -910,7 +920,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             itemBtns = itemActions
                 .map(item => ({
                     ...item,
-                    ...getExprProperties(item as Schema, itemData),
+                    ...getExprProperties(item as Schema, itemData)
                 }))
                 .filter(item => !item.hidden && item.visible !== false);
         }
@@ -946,7 +956,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             bulkBtns = bulkActions
                 .map(item => ({
                     ...item,
-                    ...getExprProperties(item as Schema, ctx),
+                    ...getExprProperties(item as Schema, ctx)
                 }))
                 .filter(item => !item.hidden && item.visible !== false);
         }
@@ -957,7 +967,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             itemBtns = itemActions
                 .map(item => ({
                     ...item,
-                    ...getExprProperties(item as Schema, itemData),
+                    ...getExprProperties(item as Schema, itemData)
                 }))
                 .filter(item => !item.hidden && item.visible !== false);
         }
@@ -970,17 +980,13 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                         {
                             size: 'sm',
                             ...omit(btn, ['visibleOn', 'hiddenOn', 'disabledOn']),
-                            type: 'button',
+                            type: 'button'
                         },
                         {
                             key: `bulk-${index}`,
                             data: ctx,
                             disabled: btn.disabled || (btn.requireSelected !== false ? !selectedItems.length : false),
-                            onAction: this.handleBulkAction.bind(
-                                this,
-                                selectedItems.concat(),
-                                unSelectedItems.concat()
-                            ),
+                            onAction: this.handleBulkAction.bind(this, selectedItems.concat(), unSelectedItems.concat())
                         }
                     )
                 )}
@@ -991,13 +997,13 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                         {
                             size: 'sm',
                             ...omit(btn, ['visibleOn', 'hiddenOn', 'disabledOn']),
-                            type: 'button',
+                            type: 'button'
                         },
                         {
                             key: `item-${index}`,
                             data: itemData,
                             disabled: btn.disabled,
-                            onAction: this.handleItemAction.bind(this, btn, itemData),
+                            onAction: this.handleItemAction.bind(this, btn, itemData)
                         }
                     )
                 )}
@@ -1019,7 +1025,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                 {render(
                     'pagination',
                     {
-                        type: 'pagination',
+                        type: 'pagination'
                     },
                     {
                         activePage: page,
@@ -1056,7 +1062,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
 
         const perPages = (perPageAvailable || [5, 10, 20, 50, 100]).map((item: any) => ({
             label: item,
-            value: item + '',
+            value: item + ''
         }));
 
         return (
@@ -1141,7 +1147,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             const children: Array<any> = toolbar
                 .map((toolbar, index) => ({
                     dom: this.renderToolbar(toolbar, index, childProps, toolbarRenderer),
-                    toolbar,
+                    toolbar
                 }))
                 .filter(item => item.dom);
             const len = children.length;
@@ -1195,7 +1201,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                 createObject(store.filterData, {
                     items: childProps.items,
                     selectedItems: childProps.selectedItems,
-                    unSelectedItems: childProps.unSelectedItems,
+                    unSelectedItems: childProps.unSelectedItems
                 }),
                 {}
             ),
@@ -1206,7 +1212,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
             onAction: this.handleAction,
             onChangePage: this.handleChangePage,
             onBulkAction: this.handleBulkAction,
-            $$editable,
+            $$editable
         });
     }
 
@@ -1263,9 +1269,11 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                             ×
                         </span>
                         <span className={cx('Crud-valueLabel')}>
-                            {labelTpl
-                                ? (<Html html={filter(labelTpl, item)} />)
-                                : getVariable(item, labelField || 'label') || getVariable(item, primaryField || 'id')}
+                            {labelTpl ? (
+                                <Html html={filter(labelTpl, item)} />
+                            ) : (
+                                getVariable(item, labelField || 'label') || getVariable(item, primaryField || 'id')
+                            )}
                         </span>
                     </div>
                 ))}
@@ -1302,7 +1310,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
         return (
             <div
                 className={cx('Crud', className, {
-                    'is-loading': store.loading,
+                    'is-loading': store.loading
                 })}
             >
                 {filter && (!store.filterTogggable || store.filterVisible)
@@ -1314,14 +1322,14 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                               submitText: '搜索',
                               ...filter,
                               type: 'form',
-                              api: null,
+                              api: null
                           },
                           {
                               key: 'filter',
                               data: store.filterData,
                               onReset: this.handleFilterReset,
                               onSubmit: this.handleFilterSubmit,
-                              onInit: this.handleFilterInit,
+                              onInit: this.handleFilterInit
                           }
                       )
                     : null}
@@ -1332,7 +1340,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                     'body',
                     {
                         ...rest,
-                        type: mode || 'table',
+                        type: mode || 'table'
                     },
                     {
                         key: 'body',
@@ -1359,7 +1367,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                         onPopOverClose: this.handleChildPopOverClose,
                         headerToolbarRender: this.renderHeaderToolbar,
                         footerToolbarRender: this.renderFooterToolbar,
-                        data: store.mergedData,
+                        data: store.mergedData
                     }
                 )}
 
@@ -1368,11 +1376,11 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                           'info',
                           {
                               type: 'spinner',
-                              overlay: true,
+                              overlay: true
                           },
                           {
                               size: 'lg',
-                              key: 'info',
+                              key: 'info'
                           }
                       )
                     : null}
@@ -1381,14 +1389,14 @@ export default class CRUD extends React.Component<CRUDProps, any> {
                     'dialog',
                     {
                         ...((store.action as Action) && ((store.action as Action).dialog as object)),
-                        type: 'dialog',
+                        type: 'dialog'
                     },
                     {
                         key: 'dialog',
                         data: store.dialogData,
                         onConfirm: this.handleDialogConfirm,
                         onClose: this.handleDialogClose,
-                        show: store.dialogOpen,
+                        show: store.dialogOpen
                     }
                 )}
             </div>
@@ -1399,7 +1407,7 @@ export default class CRUD extends React.Component<CRUDProps, any> {
 @Renderer({
     test: /(^|\/)crud$/,
     storeType: CRUDStore.name,
-    name: 'crud',
+    name: 'crud'
 })
 export class CRUDRenderer extends CRUD {
     static contextType = ScopedContext;

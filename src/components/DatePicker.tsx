@@ -13,12 +13,13 @@ import 'moment/locale/zh-cn';
 import CalendarContainer from 'react-datetime/src/CalendarContainer';
 import ReactDatePicker from 'react-datetime';
 import Select from './Select';
-import {closeIcon} from './icons';
+import {Icon} from './icons';
 import PopOver from './PopOver';
 import Overlay from './Overlay';
 import {classPrefix, classnames} from '../themes/default';
 import {ClassNamesFn, themeable} from '../theme';
 import {findDOMNode} from 'react-dom';
+import find from 'lodash/find';
 
 class HackedCalendarContainer extends CalendarContainer {
     render() {
@@ -49,15 +50,19 @@ class BaseDatePicker extends ReactDatePicker {
                 return props;
             };
         }
-        
-        // TODO: Make a function or clean up this code,
-		// logic right now is really hard to follow
-		let className = 'rdt' + (this.props.className ?
-                    ( Array.isArray( this.props.className ) ?
-                    ' ' + this.props.className.join( ' ' ) : ' ' + this.props.className) : ''),
-            children:Array<any> = [];
 
-        if ( this.props.input ) {
+        // TODO: Make a function or clean up this code,
+        // logic right now is really hard to follow
+        let className =
+                'rdt' +
+                (this.props.className
+                    ? Array.isArray(this.props.className)
+                        ? ' ' + this.props.className.join(' ')
+                        : ' ' + this.props.className
+                    : ''),
+            children: Array<any> = [];
+
+        if (this.props.input) {
             var finalInputProps = {
                 type: 'text',
                 className: 'form-control',
@@ -69,23 +74,18 @@ class BaseDatePicker extends ReactDatePicker {
                 ...this.props.inputProps
             };
 
-            if ( this.props.renderInput ) {
-                children = [(
-                    <div key='i'>
-                        {this.props.renderInput(finalInputProps, this.openCalendar, this.closeCalendar)}
-                    </div>
-                )];
-            } else {
-                children= [
-                    <input key="i" {...finalInputProps} />
+            if (this.props.renderInput) {
+                children = [
+                    <div key="i">{this.props.renderInput(finalInputProps, this.openCalendar, this.closeCalendar)}</div>
                 ];
+            } else {
+                children = [<input key="i" {...finalInputProps} />];
             }
         } else {
             className += ' rdtStatic';
         }
 
-        if ( this.state.open )
-            className += ' rdtOpen';
+        if (this.state.open) className += ' rdtOpen';
 
         return (
             <div className={className}>
@@ -127,7 +127,7 @@ interface CustomDaysViewProps {
 
 class CustomDaysView extends React.Component<CustomDaysViewProps> {
     static defaultProps = {
-        classPrefix: 'a-',
+        classPrefix: 'a-'
     };
 
     constructor(props: CustomDaysViewProps) {
@@ -183,7 +183,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
 
             this.props.setDateTimeState({
                 viewDate,
-                selectedDate: viewDate.clone(),
+                selectedDate: viewDate.clone()
             });
             return;
         }
@@ -206,7 +206,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
             viewDate: viewDate
                 .clone()
                 .month(option.value)
-                .startOf('month'),
+                .startOf('month')
         });
     }
 
@@ -223,7 +223,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
         const viewDate = this.props.viewDate;
         const newDate = viewDate.clone().year(option.value);
         this.props.setDateTimeState({
-            viewDate: newDate[newDate.isBefore(viewDate) ? 'endOf' : 'startOf']('year'),
+            viewDate: newDate[newDate.isBefore(viewDate) ? 'endOf' : 'startOf']('year')
         });
     }
 
@@ -233,7 +233,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
 
         this.props.setDateTimeState({
             viewDate: date.clone(),
-            selectedDate: date.clone(),
+            selectedDate: date.clone()
         });
 
         if (!this.props.requiredConfirm) {
@@ -245,7 +245,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
         const date = this.props.viewDate.clone();
 
         this.props.setDateTimeState({
-            selectedDate: date,
+            selectedDate: date
         });
         this.props.onChange(date);
         this.props.onClose && this.props.onClose();
@@ -276,12 +276,12 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
             let currentYear = date.clone().set({
                 year: year,
                 month: irrelevantMonth,
-                date: irrelevantDate,
+                date: irrelevantDate
             });
             const noOfDaysInYear = parseInt(currentYear.endOf('year').format('DDD'), 10);
             const daysInYear = Array.from(
                 {
-                    length: noOfDaysInYear,
+                    length: noOfDaysInYear
                 },
                 (e, i) => i + 1
             );
@@ -303,12 +303,12 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
             let currentYear = date.clone().set({
                 year: year,
                 month: irrelevantMonth,
-                date: irrelevantDate,
+                date: irrelevantDate
             });
             const noOfDaysInYear = parseInt(currentYear.endOf('year').format('DDD'), 10);
             const daysInYear = Array.from(
                 {
-                    length: noOfDaysInYear,
+                    length: noOfDaysInYear
                 },
                 (e, i) => i + 1
             );
@@ -327,7 +327,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
                 value={date.year()}
                 options={years.map(year => ({
                     label: `${year}`,
-                    value: year,
+                    value: year
                 }))}
                 onChange={this.handleYearChange}
                 clearable={false}
@@ -348,7 +348,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
             const currentMonth = date.clone().set({
                 year,
                 month: i,
-                date: 1,
+                date: 1
             });
 
             const noOfDaysInMonth = parseInt(currentMonth.endOf('month').format('D'), 10);
@@ -369,7 +369,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
                 value={date.month()}
                 options={days.map(day => ({
                     label: `${day + 1}`,
-                    value: day,
+                    value: day
                 }))}
                 onChange={this.handleMonthChange}
                 clearable={false}
@@ -484,7 +484,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
             dayProps = {
                 key: prevMonth.format('M_D'),
                 'data-value': prevMonth.date(),
-                className: classes,
+                className: classes
             };
 
             if (!isDisabled) dayProps.onClick = this.handleDayChange;
@@ -532,7 +532,7 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
                 </tr>
             </thead>,
 
-            <tbody key="tb">{this.renderDays()}</tbody>,
+            <tbody key="tb">{this.renderDays()}</tbody>
         ];
 
         footer && tableChildren.push(footer);
@@ -544,6 +544,169 @@ class CustomDaysView extends React.Component<CustomDaysViewProps> {
         );
     }
 }
+
+const availableShortcuts: {[propName: string]: any} = {
+    today: {
+        label: '今天',
+        date: (now: moment.Moment) => {
+            return now.startOf('day');
+        }
+    },
+
+    yesterday: {
+        label: '昨天',
+        date: (now: moment.Moment) => {
+            return now.add(-1, 'days').startOf('day');
+        }
+    },
+
+    thisweek: {
+        label: '本周一',
+        date: (now: moment.Moment) => {
+            return now.startOf('week').add(-1, 'weeks');
+        }
+    },
+
+    thismonth: {
+        label: '本月初',
+        date: (now: moment.Moment) => {
+            return now.startOf('month');
+        }
+    },
+
+    prevmonth: {
+        label: '上个月初',
+        date: (now: moment.Moment) => {
+            return now.startOf('month').add(-1, 'month');
+        }
+    },
+
+    prevquarter: {
+        label: '上个季节初',
+        date: (now: moment.Moment) => {
+            return now.startOf('quarter').add(-1, 'quarter');
+        }
+    },
+
+    thisquarter: {
+        label: '本季度初',
+        date: (now: moment.Moment) => {
+            return now.startOf('quarter');
+        }
+    },
+
+    tomorrow: {
+        label: '明天',
+        date: (now: moment.Moment) => {
+            return now.add(1, 'days').startOf('day');
+        }
+    },
+
+    endofthisweek: {
+        label: '本周日',
+        date: (now: moment.Moment) => {
+            return now.endOf('week');
+        }
+    },
+
+    endofthismonth: {
+        label: '本月底',
+        date: (now: moment.Moment) => {
+            return now.endOf('month');
+        }
+    }
+};
+
+const advancedShortcuts = [
+    {
+        regexp: /^(\d+)daysago$/,
+        resolve: (_: string, days: string) => {
+            return {
+                label: `${days}天前`,
+                date: (now: moment.Moment) => {
+                    return now.subtract(days, 'days');
+                }
+            };
+        }
+    },
+    {
+        regexp: /^(\d+)dayslater$/,
+        resolve: (_: string, days: string) => {
+            return {
+                label: `${days}天后`,
+                date: (now: moment.Moment) => {
+                    return now.add(days, 'days');
+                }
+            };
+        }
+    },
+    {
+        regexp: /^(\d+)weeksago$/,
+        resolve: (_: string, weeks: string) => {
+            return {
+                label: `${weeks}周前`,
+                date: (now: moment.Moment) => {
+                    return now.subtract(weeks, 'weeks');
+                }
+            };
+        }
+    },
+    {
+        regexp: /^(\d+)weekslater$/,
+        resolve: (_: string, weeks: string) => {
+            return {
+                label: `${weeks}周后`,
+                date: (now: moment.Moment) => {
+                    return now.add(weeks, 'weeks');
+                }
+            };
+        }
+    },
+    {
+        regexp: /^(\d+)monthsago$/,
+        resolve: (_: string, months: string) => {
+            return {
+                label: `${months}月前`,
+                date: (now: moment.Moment) => {
+                    return now.subtract(months, 'months');
+                }
+            };
+        }
+    },
+    {
+        regexp: /^(\d+)monthslater$/,
+        resolve: (_: string, months: string) => {
+            return {
+                label: `${months}月后`,
+                date: (now: moment.Moment) => {
+                    return now.add(months, 'months');
+                }
+            };
+        }
+    },
+    {
+        regexp: /^(\d+)quartersago$/,
+        resolve: (_: string, quarters: string) => {
+            return {
+                label: `${quarters}季度前`,
+                date: (now: moment.Moment) => {
+                    return now.subtract(quarters, 'quarters');
+                }
+            };
+        }
+    },
+    {
+        regexp: /^(\d+)quarterslater$/,
+        resolve: (_: string, quarters: string) => {
+            return {
+                label: `${quarters}季度后`,
+                date: (now: moment.Moment) => {
+                    return now.add(quarters, 'quarters');
+                }
+            };
+        }
+    }
+];
 
 export interface DateProps {
     viewMode: 'years' | 'months' | 'days' | 'time';
@@ -563,8 +726,10 @@ export interface DateProps {
     maxTime?: moment.Moment;
     clearable?: boolean;
     defaultValue?: any;
+    utc?: boolean;
     onChange: (value: any) => void;
     value: any;
+    shortcuts: string;
     [propName: string]: any;
 }
 
@@ -575,18 +740,22 @@ export interface DatePickerState {
 }
 
 export class DatePicker extends React.Component<DateProps, DatePickerState> {
-    static defaultProps: Pick<DateProps, 'viewMode'> = {
+    static defaultProps: Pick<DateProps, 'viewMode' | 'shortcuts'> = {
         viewMode: 'days',
+        shortcuts: ''
     };
     state: DatePickerState = {
         isOpened: false,
         isFocused: false,
-        value: this.props.value ? moment(this.props.value, this.props.format) : undefined,
+        value: this.props.value
+            ? (this.props.utc ? moment.utc : moment)(this.props.value, this.props.format)
+            : undefined
     };
     constructor(props: DateProps) {
         super(props);
 
         this.handleChange = this.handleChange.bind(this);
+        this.selectRannge = this.selectRannge.bind(this);
         this.checkIsValidDate = this.checkIsValidDate.bind(this);
         this.open = this.open.bind(this);
         this.close = this.close.bind(this);
@@ -605,7 +774,9 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
     componentWillReceiveProps(nextProps: DateProps) {
         if (this.props.value !== nextProps.value) {
             this.setState({
-                value: nextProps.value ? moment(nextProps.value, nextProps.format) : undefined,
+                value: nextProps.value
+                    ? (nextProps.utc ? moment.utc : moment)(nextProps.value, nextProps.format)
+                    : undefined
             });
         }
     }
@@ -620,13 +791,13 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
 
     handleFocus() {
         this.setState({
-            isFocused: true,
+            isFocused: true
         });
     }
 
     handleBlur() {
         this.setState({
-            isFocused: false,
+            isFocused: false
         });
     }
 
@@ -649,7 +820,7 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
         this.props.disabled ||
             this.setState(
                 {
-                    isOpened: true,
+                    isOpened: true
                 },
                 fn
             );
@@ -657,7 +828,7 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
 
     close() {
         this.setState({
-            isOpened: false,
+            isOpened: false
         });
     }
 
@@ -688,6 +859,12 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
         }
     }
 
+    selectRannge(item: any) {
+        const now = moment();
+        this.handleChange(item.date(now));
+        this.close();
+    }
+
     checkIsValidDate(currentDate: moment.Moment) {
         const {minDate, maxDate} = this.props;
 
@@ -712,6 +889,23 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
         this.dom = ref;
     };
 
+    getAvailableShortcuts(key:string) {
+        if (availableShortcuts[key]) {
+            return availableShortcuts[key];
+        }
+
+        for (let i = 0, len = advancedShortcuts.length; i < len; i++) {
+            let item = advancedShortcuts[i];
+            const m = item.regexp.exec(key);
+            
+            if (m) {
+                return item.resolve.apply(item, m);
+            }
+        }
+
+        return null;
+    }
+
     render() {
         const {
             classPrefix: ns,
@@ -727,6 +921,8 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
             timeConstraints,
             popOverContainer,
             clearable,
+            shortcuts,
+            utc
         } = this.props;
 
         const isOpened = this.state.isOpened;
@@ -742,7 +938,7 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
                     `${ns}DatePicker`,
                     {
                         'is-disabled': disabled,
-                        'is-focused': this.state.isFocused,
+                        'is-focused': this.state.isFocused
                     },
                     className
                 )}
@@ -757,7 +953,7 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
 
                 {clearable && !disabled && value ? (
                     <a className={`${ns}DatePicker-clear`} onClick={this.clearValue}>
-                        {closeIcon}
+                        <Icon icon="close" className="icon" />
                     </a>
                 ) : null}
 
@@ -778,6 +974,34 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
                             overlay
                             onClick={this.handlePopOverClick}
                         >
+                            {shortcuts ? (
+                                <ul className={`${ns}DatePicker-shortcuts`}>
+                                    {(typeof shortcuts === 'string'
+                                        ? shortcuts.split(',')
+                                        : Array.isArray(shortcuts)
+                                        ? shortcuts
+                                        : []
+                                    )
+                                    .map(key => {
+                                        const shortcut = this.getAvailableShortcuts(key);
+
+                                        if (!shortcut) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <li
+                                                className={`${ns}DatePicker-shortcut`}
+                                                onClick={() => this.selectRannge(shortcut)}
+                                                key={key}
+                                            >
+                                                <a>{shortcut.label}</a>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            ) : null}
+
                             <BaseDatePicker
                                 value={date}
                                 onChange={this.handleChange}
@@ -791,6 +1015,7 @@ export class DatePicker extends React.Component<DateProps, DatePickerState> {
                                 timeConstraints={timeConstraints}
                                 input={false}
                                 onClose={this.close}
+                                utc={utc}
                             />
                         </PopOver>
                     </Overlay>

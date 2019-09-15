@@ -17,7 +17,7 @@ export interface PanelProps extends RendererProps {
     actionsClassName?: string;
     bodyClassName?: string;
     children?: React.ReactNode | ((props: any) => JSX.Element);
-    affixFooter?: boolean;
+    affixFooter?: boolean | 'always';
 }
 
 export default class Panel extends React.Component<PanelProps> {
@@ -44,6 +44,7 @@ export default class Panel extends React.Component<PanelProps> {
         this.parentNode = parent;
         parent.addEventListener('scroll', this.affixDetect);
         this.unSensor = resizeSensor(dom as HTMLElement, this.affixDetect);
+        this.affixDetect();
     }
 
     componentWillUnmount() {
@@ -60,11 +61,19 @@ export default class Panel extends React.Component<PanelProps> {
 
         const affixDom = this.affixDom.current;
         const footerDom = this.footerDom.current;
-        const clip = footerDom.getBoundingClientRect();
-        const clientHeight = window.innerHeight;
-        const affixed = clip.top > clientHeight;
-
+        let affixed = false;
         footerDom.offsetWidth && (affixDom.style.cssText = `width: ${footerDom.offsetWidth}px;`);
+
+        if (this.props.affixFooter === 'always') {
+            affixed = true;
+            footerDom.classList.add('invisible2');
+        } else {
+            const clip = footerDom.getBoundingClientRect();
+            const clientHeight = window.innerHeight;
+            affixed = clip.top > clientHeight;
+        }
+
+        
         affixed ? affixDom.classList.add('in') : affixDom.classList.remove('in');
     }
 
@@ -90,7 +99,7 @@ export default class Panel extends React.Component<PanelProps> {
 
         const subProps = {
             data,
-            ...rest,
+            ...rest
         };
 
         return children ? (
@@ -109,7 +118,7 @@ export default class Panel extends React.Component<PanelProps> {
             return actions.map((action, key) =>
                 render('action', action, {
                     type: action.type || 'button',
-                    key: key,
+                    key: key
                 })
             );
         }
@@ -140,7 +149,7 @@ export default class Panel extends React.Component<PanelProps> {
 
         const subProps = {
             data,
-            ...rest,
+            ...rest
         };
 
         const footerDoms = [];
@@ -187,6 +196,6 @@ export default class Panel extends React.Component<PanelProps> {
 
 @Renderer({
     test: /(^|\/)panel$/,
-    name: 'panel',
+    name: 'panel'
 })
 export class PanelRenderer extends Panel {}

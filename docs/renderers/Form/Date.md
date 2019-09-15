@@ -6,6 +6,7 @@
 -   `format` 默认 `X` 即时间戳格式，用来提交的时间格式。更多格式类型请参考 [moment](http://momentjs.com/).
 -   `inputFormat` 默认 `YYYY-MM-DD` 用来配置显示的时间格式。
 -   `placeholder` 默认 `请选择日期`
+-  `shortcuts` 日期快捷键，如： `"today,3dayslater"` 可用关键字: `today`、 `yesterday`、 `thisweek`、 `thismonth`、 `prevmonth`、 `prevquarter`、 `thisquarter`、 `tomorrow`、 `endofthisweek`、 `endofthismonth`、 `{n}daysago` 、 `{n}dayslater`、 `{n}weeksago`、 `{n}weekslater`、 `{n}monthsago`、 `{n}monthslater`、 `{n}quartersago`、 `{n}quarterslater`
 -   `value` 这里面 value 需要特殊说明一下，因为支持相对值。如：
     -   `-2mins` 2 分钟前
     -   `+2days` 2 天后
@@ -22,7 +23,8 @@
     {
       "type": "date",
       "name": "select",
-      "label": "日期"
+      "label": "日期",
+      "shortcuts": "today,3dayslater,3quarterslater"
     },
 
     {

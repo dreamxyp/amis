@@ -1,29 +1,21 @@
-import {
-    types,
-    getParent,
-    SnapshotIn,
-    flow,
-    getEnv,
-    getRoot,
-    IAnyModelType
-} from "mobx-state-tree";
-import {
-    iRendererStore,
-} from './iRenderer';
-import { resolveVariable } from "../utils/tpl-builtin";
+import {types, getParent, SnapshotIn, flow, getEnv, getRoot, IAnyModelType} from 'mobx-state-tree';
+import {iRendererStore} from './iRenderer';
+import {resolveVariable} from '../utils/tpl-builtin';
 import isEqual = require('lodash/isEqual');
 import find = require('lodash/find');
-import { isBreakpoint, createObject, isObject, isVisible, guid } from "../utils/helper";
-import { evalExpression } from "../utils/tpl";
+import {isBreakpoint, createObject, isObject, isVisible, guid, findTree, flattenTree, eachTree} from '../utils/helper';
+import {evalExpression} from '../utils/tpl';
 
 export const Column = types
-    .model("Column", {
+    .model('Column', {
         label: types.optional(types.frozen(), undefined),
         type: types.string,
         name: types.maybe(types.string),
         groupName: '',
         toggled: false,
         toggable: true,
+        expandable: false,
+        isPrimary: false,
         searchable: types.maybe(types.frozen()),
         sortable: false,
         filterable: types.optional(types.frozen(), undefined),
@@ -35,10 +27,10 @@ export const Column = types
         remark: types.optional(types.frozen(), undefined),
         className: ''
     })
-    .actions((self) => ({
+    .actions(self => ({
         toggleToggle() {
             self.toggled = !self.toggled;
-            const table = (getParent(self, 2) as ITableStore);
+            const table = getParent(self, 2) as ITableStore;
 
             if (!table.activeToggaleColumns.length) {
                 self.toggled = true;
@@ -46,7 +38,7 @@ export const Column = types
 
             table.persistSaveToggledColumns();
         },
-        setToggled(value:boolean) {
+        setToggled(value: boolean) {
             self.toggled = value;
         }
     }));
@@ -55,21 +47,22 @@ export type IColumn = typeof Column.Type;
 export type SColumn = SnapshotIn<typeof Column>;
 
 export const Row = types
-    .model("Row", {
+    .model('Row', {
         id: types.identifier,
+        parentId: '',
         key: types.string,
-        expandable: false,
         pristine: types.frozen({} as any),
         data: types.frozen({} as any),
         rowSpans: types.frozen({} as any),
         index: types.number,
         newIndex: types.number,
+        expandable: false,
         isHover: false,
         children: types.optional(types.array(types.late((): IAnyModelType => Row)), []),
-        depth: types.number// 当前children位于第几层，便于使用getParent获取最顶层TableStore
+        depth: types.number // 当前children位于第几层，便于使用getParent获取最顶层TableStore
     })
-    .views((self) => ({
-        get checked():boolean {
+    .views(self => ({
+        get checked(): boolean {
             return (getParent(self, self.depth * 2) as ITableStore).isSelected(self as IRow);
         },
 
@@ -81,7 +74,19 @@ export const Row = types
             return Object.keys(self.data).some(key => !isEqual(self.data[key], self.pristine[key]));
         },
 
-        get expanded():boolean {
+        getDataWithModifiedChilden() {
+            let data = {
+                ...self.data
+            };
+
+            if (data.children && self.children) {
+                data.children = self.children.map(item => item.getDataWithModifiedChilden());
+            }
+
+            return data;
+        },
+
+        get expanded(): boolean {
             return (getParent(self, self.depth * 2) as ITableStore).isExpanded(self as IRow);
         },
 
@@ -89,24 +94,26 @@ export const Row = types
             return self.index !== self.newIndex;
         },
 
-        get locals():any {
+        get locals(): any {
             return createObject(
                 createObject((getParent(self, self.depth * 2) as ITableStore).data, {
                     index: self.index
-                }), self.data);
+                }),
+                self.data
+            );
         },
 
-        get checkable():boolean {
-            const table = (getParent(self, self.depth * 2) as ITableStore);
+        get checkable(): boolean {
+            const table = getParent(self, self.depth * 2) as ITableStore;
             return table && table.itemCheckableOn ? evalExpression(table.itemCheckableOn, (self as IRow).locals) : true;
         },
 
-        get draggable():boolean {
-            const table = (getParent(self, self.depth * 2) as ITableStore);
+        get draggable(): boolean {
+            const table = getParent(self, self.depth * 2) as ITableStore;
             return table && table.itemDraggableOn ? evalExpression(table.itemDraggableOn, (self as IRow).locals) : true;
         }
     }))
-    .actions((self) => ({
+    .actions(self => ({
         toggle() {
             (getParent(self, self.depth * 2) as ITableStore).toggle(self as IRow);
         },
@@ -115,15 +122,16 @@ export const Row = types
             (getParent(self, self.depth * 2) as ITableStore).toggleExpanded(self as IRow);
         },
 
-        change(values:object, savePristine?:boolean) {
+        change(values: object, savePristine?: boolean) {
             self.data = {
                 ...self.data,
                 ...values
             };
 
-            savePristine && (self.pristine = {
-                ...self.data
-            });
+            savePristine &&
+                (self.pristine = {
+                    ...self.data
+                });
         },
 
         reset() {
@@ -131,7 +139,7 @@ export const Row = types
             self.data = self.pristine;
         },
 
-        setIsHover(value:boolean) {
+        setIsHover(value: boolean) {
             self.isHover = value;
         }
     }));
@@ -154,6 +162,7 @@ export const TableStore = iRendererStore
         selectable: false,
         multiple: true,
         footable: types.frozen(),
+        expandConfig: types.frozen(),
         isNested: false,
         columnsTogglable: types.optional(types.union(types.boolean, types.literal('auto')), 'auto'),
         itemCheckableOn: '',
@@ -163,23 +172,27 @@ export const TableStore = iRendererStore
     })
     .views(self => {
         function getFilteredColumns() {
-            return self
-                .columns
-                .filter(item => isVisible(item.pristine, self.data) && (
-                    item.type === '__checkme' ? self.selectable && !self.dragging && !self.hideCheckToggler && self.rows.length
-                    : item.type === '__dragme' ? self.dragging
-                    : item.type === '__expandme' ? (getFootableColumns().length || self.isNested) && !self.dragging
-                    : (item.toggled || !item.toggable) && (!self.footable || !item.breakpoint || !isBreakpoint(item.breakpoint))
-                ));
+            return self.columns.filter(
+                item =>
+                    isVisible(item.pristine, self.data) &&
+                    (item.type === '__checkme'
+                        ? self.selectable && !self.dragging && !self.hideCheckToggler && self.rows.length
+                        : item.type === '__dragme'
+                        ? self.dragging
+                        : item.type === '__expandme'
+                        ? (getFootableColumns().length || self.isNested) && !self.dragging
+                        : (item.toggled || !item.toggable) &&
+                          (!self.footable || !item.breakpoint || !isBreakpoint(item.breakpoint)))
+            );
         }
 
         function getFootableColumns() {
-            return self
-                .columns
-                .filter(item =>
-                    item.type === '__checkme' || item.type === '__dragme' || item.type === '__expandme' ? false
-                    : (item.toggled || !item.toggable) && (self.footable && item.breakpoint && isBreakpoint(item.breakpoint))
-                );
+            return self.columns.filter(item =>
+                item.type === '__checkme' || item.type === '__dragme' || item.type === '__expandme'
+                    ? false
+                    : (item.toggled || !item.toggable) &&
+                      (self.footable && item.breakpoint && isBreakpoint(item.breakpoint))
+            );
         }
 
         function getLeftFixedColumns() {
@@ -198,11 +211,11 @@ export const TableStore = iRendererStore
             return getFilteredColumns().filter(item => item.fixed === 'right');
         }
 
-        function isSelected(row:IRow):boolean {
+        function isSelected(row: IRow): boolean {
             return !!~self.selectedRows.indexOf(row);
         }
 
-        function isExpanded(row:IRow):boolean {
+        function isExpanded(row: IRow): boolean {
             return !!~self.expandedRows.indexOf(row);
         }
 
@@ -231,14 +244,14 @@ export const TableStore = iRendererStore
         }
 
         function getMovedRows() {
-            return self.rows.filter(item => item.moved);
+            return flattenTree(self.rows).filter((item: IRow) => item.moved);
         }
 
-        function getMovied() {
+        function getMoved() {
             return getMovedRows().length;
         }
 
-        function getHoverIndex():number {
+        function getHoverIndex(): number {
             return self.rows.findIndex(item => item.isHover);
         }
 
@@ -246,18 +259,18 @@ export const TableStore = iRendererStore
             return self.rows.filter(item => !item.checked);
         }
 
-        function getData(superData:any):any {
+        function getData(superData: any): any {
             return createObject(superData, {
                 items: self.rows.map(item => item.data),
                 selectedItems: self.selectedRows.map(item => item.data),
-                unSeelctedItems: getUnSelectedRows().map(item => item.data),
+                unSeelctedItems: getUnSelectedRows().map(item => item.data)
             });
         }
 
-        function getColumnGroup():Array<{
-            label: string,
-            index: number,
-            colSpan: number
+        function getColumnGroup(): Array<{
+            label: string;
+            index: number;
+            colSpan: number;
         }> {
             const columsn = getFilteredColumns();
             const len = columsn.length;
@@ -266,10 +279,10 @@ export const TableStore = iRendererStore
                 return [];
             }
 
-            const result:Array<{
-                label: string,
-                index: number,
-                colSpan: number
+            const result: Array<{
+                label: string;
+                index: number;
+                colSpan: number;
             }> = [
                 {
                     label: columsn[0].groupName,
@@ -284,7 +297,7 @@ export const TableStore = iRendererStore
             }
 
             for (let i = 1; i < len; i++) {
-                let prev = result[result.length -1];
+                let prev = result[result.length - 1];
                 const current = columsn[i];
 
                 if (current.groupName === prev.label) {
@@ -334,9 +347,11 @@ export const TableStore = iRendererStore
                 return !!self.selectedRows.length;
             },
 
-            get allChecked():boolean {
-                return !!(self.selectedRows.length === (self as ITableStore).checkableRows.length 
-                    && (self as ITableStore).checkableRows.length);
+            get allChecked(): boolean {
+                return !!(
+                    self.selectedRows.length === (self as ITableStore).checkableRows.length &&
+                    (self as ITableStore).checkableRows.length
+                );
             },
 
             isSelected,
@@ -368,7 +383,7 @@ export const TableStore = iRendererStore
             },
 
             get moved() {
-                return getMovied();
+                return getMoved();
             },
 
             get movedRows() {
@@ -383,11 +398,15 @@ export const TableStore = iRendererStore
 
             get columnGroup() {
                 return getColumnGroup();
+            },
+
+            getRowById(id: string) {
+                return findTree(self.rows, item => item.id === id);
             }
         };
     })
     .actions(self => {
-        function update(config:Partial<STableStore>) {
+        function update(config: Partial<STableStore>) {
             config.primaryField !== void 0 && (self.primaryField = config.primaryField);
             config.selectable !== void 0 && (self.selectable = config.selectable);
             config.columnsTogglable !== void 0 && (self.columnsTogglable = config.columnsTogglable);
@@ -399,19 +418,20 @@ export const TableStore = iRendererStore
 
             config.multiple !== void 0 && (self.multiple = config.multiple);
             config.footable !== void 0 && (self.footable = config.footable);
+            config.expandConfig !== void 0 && (self.expandConfig = config.expandConfig);
             config.itemCheckableOn !== void 0 && (self.itemCheckableOn = config.itemCheckableOn);
             config.itemDraggableOn !== void 0 && (self.itemDraggableOn = config.itemDraggableOn);
             config.hideCheckToggler !== void 0 && (self.hideCheckToggler = !!config.hideCheckToggler);
 
-            config.combineNum !== void 0 && (self.combineNum = parseInt(config.combineNum as any, 10) || 0)
+            config.combineNum !== void 0 && (self.combineNum = parseInt(config.combineNum as any, 10) || 0);
 
             if (config.columns && Array.isArray(config.columns)) {
-                let columns:Array<SColumn> = config.columns.concat();
+                let columns: Array<SColumn> = config.columns.concat();
 
                 columns.unshift({
                     type: '__expandme',
                     toggable: false,
-                    fixed: 'left',
+                    // fixed: 'left',
                     className: 'Table-expandCell'
                 });
 
@@ -431,23 +451,24 @@ export const TableStore = iRendererStore
                 columns = columns.map((item, index) => ({
                     ...item,
                     index,
-                    rawIndex: index -3,
+                    rawIndex: index - 3,
                     type: item.type || 'plain',
                     pristine: item,
                     toggled: item.toggled !== false,
-                    breakpoint: item.breakpoint
+                    breakpoint: item.breakpoint,
+                    isPrimary: index === 3
                 }));
 
                 self.columns.replace(columns as any);
             }
         }
 
-        function combineCell(arr: Array<SRow>, keys:Array<string>): Array<SRow> {
+        function combineCell(arr: Array<SRow>, keys: Array<string>): Array<SRow> {
             if (!keys.length || !arr.length) {
                 return arr;
             }
 
-            const key:string = keys.shift() as string;
+            const key: string = keys.shift() as string;
             let rowIndex = 0;
             let row = arr[rowIndex];
             row.rowSpans[key] = 1;
@@ -476,12 +497,12 @@ export const TableStore = iRendererStore
             return arr;
         }
 
-        function autoCombineCell(arr: Array<SRow>, columns: Array<IColumn>,  maxCount:number): Array<SRow> {
+        function autoCombineCell(arr: Array<SRow>, columns: Array<IColumn>, maxCount: number): Array<SRow> {
             if (!columns.length || !maxCount || !arr.length) {
                 return arr;
             }
 
-            const keys:Array<string> = [];
+            const keys: Array<string> = [];
             for (let i = 0; i < maxCount; i++) {
                 const column = columns[i];
 
@@ -505,16 +526,20 @@ export const TableStore = iRendererStore
             return combineCell(arr, keys);
         }
 
-        function initChildren(children: Array<any>, depth: number, pindex: number): any {
+        function initChildren(children: Array<any>, depth: number, pindex: number, parentId: string): any {
             depth += 1;
             return children.map((item, key) => {
-                item = isObject(item) ? item : {
-                    item
-                };
+                item = isObject(item)
+                    ? item
+                    : {
+                          item
+                      };
+                const id = guid();
 
                 return {
                     // id: String(item && (item as any)[self.primaryField] || `${pindex}-${depth}-${key}`),
-                    id: guid(),
+                    id: id,
+                    parentId,
                     key: String(`${pindex}-${depth}-${key}`),
                     depth: depth,
                     index: key,
@@ -523,8 +548,11 @@ export const TableStore = iRendererStore
                     data: item,
                     rowSpans: {},
                     modified: false,
-                    children: (item && Array.isArray(item.children)) ? initChildren(item.children, depth, key) : [],
-                    expandable: !!(item && Array.isArray(item.children) || self.footable && self.footableColumns.length),
+                    children: item && Array.isArray(item.children) ? initChildren(item.children, depth, key, id) : [],
+                    expandable: !!(
+                        (item && Array.isArray(item.children) && item.children.length) ||
+                        (self.footable && self.footableColumns.length)
+                    )
                 };
             });
         }
@@ -533,44 +561,53 @@ export const TableStore = iRendererStore
             self.selectedRows.clear();
             self.expandedRows.clear();
 
-            let arr:Array<SRow> = rows.map((item, key) => ({
-                // id: getEntryId ? getEntryId(item, key) : String(item && (item as any)[self.primaryField] || `${key}-1-${key}`),
-                id: getEntryId ? getEntryId(item, key) : guid(),
-                key: String(`${key}-1-${key}`),
-                depth: 1,// 最大父节点默认为第一层，逐层叠加
-                index: key,
-                newIndex: key,
-                pristine: item,
-                data: item,
-                rowSpans: {},
-                modified: false,
-                children: (item && Array.isArray(item.children)) ? initChildren(item.children, 1, key) : [],
-                expandable: !!(item && Array.isArray(item.children) || self.footable && self.footableColumns.length),
-            }));
-            
+            let arr: Array<SRow> = rows.map((item, key) => {
+                let id = getEntryId ? getEntryId(item, key) : guid();
+                return {
+                    // id: getEntryId ? getEntryId(item, key) : String(item && (item as any)[self.primaryField] || `${key}-1-${key}`),
+                    id: id,
+                    key: String(`${key}-1-${key}`),
+                    depth: 1, // 最大父节点默认为第一层，逐层叠加
+                    index: key,
+                    newIndex: key,
+                    pristine: item,
+                    data: item,
+                    rowSpans: {},
+                    modified: false,
+                    children: item && Array.isArray(item.children) ? initChildren(item.children, 1, key, id) : [],
+                    expandable: !!(
+                        (item && Array.isArray(item.children) && item.children.length) ||
+                        (self.footable && self.footableColumns.length)
+                    )
+                };
+            });
+
             if (self.combineNum) {
                 arr = autoCombineCell(arr, self.columns, self.combineNum);
             }
 
             self.rows.replace(arr as Array<IRow>);
-            self.isNested = self.rows.some(item => item.expandable);
+            self.isNested = self.rows.some(item => item.children.length);
 
             const expand = self.footable && self.footable.expand;
-            if (expand === 'first') {
+            if (expand === 'first' || (self.expandConfig && self.expandConfig.expand === 'first')) {
                 self.rows.length && self.expandedRows.push(self.rows[0]);
-            } else if (expand === 'all') {
+            } else if (
+                (expand === 'all' && !self.footable.accordion) ||
+                (self.expandConfig && self.expandConfig.expand === 'all' && !self.expandConfig.accordion)
+            ) {
                 self.expandedRows.replace(self.rows);
             }
 
             self.dragging = false;
         }
 
-        function updateSelected(selected:Array<any>, valueField?: string) {
+        function updateSelected(selected: Array<any>, valueField?: string) {
             self.selectedRows.clear();
             self.rows.forEach(item => {
                 if (~selected.indexOf(item.pristine)) {
                     self.selectedRows.push(item);
-                } else if (find(selected, (a) => a[valueField || 'value'] == item.pristine[valueField || 'value'])) {
+                } else if (find(selected, a => a[valueField || 'value'] == item.pristine[valueField || 'value'])) {
                     self.selectedRows.push(item);
                 }
             });
@@ -584,7 +621,7 @@ export const TableStore = iRendererStore
             }
         }
 
-        function toggle(row:IRow) {
+        function toggle(row: IRow) {
             if (!row.checkable) {
                 return;
             }
@@ -596,7 +633,6 @@ export const TableStore = iRendererStore
             } else {
                 ~idx ? self.selectedRows.splice(idx, 1) : self.selectedRows.replace([row]);
             }
-
         }
 
         function clear() {
@@ -611,19 +647,44 @@ export const TableStore = iRendererStore
             }
         }
 
-        function toggleExpanded(row:IRow) {
+        function toggleExpanded(row: IRow) {
             const idx = self.expandedRows.indexOf(row);
-            ~idx ? self.expandedRows.splice(idx, 1) : self.expandedRows.push(row);
+
+            if (~idx) {
+                self.expandedRows.splice(idx, 1);
+            } else if (self.footable && self.footable.accordion) {
+                self.expandedRows.replace([row]);
+            } else if (self.expandConfig && self.expandConfig.accordion) {
+                let rows = self.expandedRows.filter(item => item.depth !== row.depth);
+                rows.push(row);
+                self.expandedRows.replace(rows);
+            } else {
+                self.expandedRows.push(row);
+            }
         }
 
-        function setOrderByInfo(key:string, direction: 'asc' | 'desc') {
+        function collapseAllAtDepth(depth: number) {
+            let rows = self.expandedRows.filter(item => item.depth !== depth);
+            self.expandedRows.replace(rows);
+        }
+
+        function setOrderByInfo(key: string, direction: 'asc' | 'desc') {
             self.orderBy = key;
             self.orderDir = direction;
         }
 
         function reset() {
             self.rows.forEach(item => item.reset());
-            const rows = self.rows.slice().sort((a, b) => a.newIndex - b.newIndex);
+            let rows = self.rows.concat();
+            eachTree(rows, item => {
+                if (item.children) {
+                    let rows = item.children.concat().sort((a, b) => a.index - b.index);
+                    rows.forEach(item => item.reset());
+                    item.children.replace(rows);
+                }
+            });
+            rows.forEach(item => item.reset());
+            rows = rows.sort((a, b) => a.index - b.index);
             self.rows.replace(rows);
             self.dragging = false;
         }
@@ -636,19 +697,34 @@ export const TableStore = iRendererStore
             self.dragging = false;
         }
 
-        function exchange(fromIndex:number, toIndex:number) {
-            const item:IRow = self.rows[fromIndex];
-            item.newIndex = toIndex;
+        function exchange(fromIndex: number, toIndex: number, item?: IRow) {
+            item = item || self.rows[fromIndex];
 
-            const newRows = self.rows.slice();
+            if (item.parentId) {
+                const parent: IRow = self.getRowById(item.parentId) as any;
+                const offset = parent.children.indexOf(item) - fromIndex;
+                toIndex += offset;
+                fromIndex += offset;
+
+                const newRows = parent.children.concat();
+                newRows.splice(fromIndex, 1);
+                newRows.splice(toIndex, 0, item);
+                newRows.forEach((item, index) => (item.newIndex = index));
+                parent.children.replace(newRows);
+                return;
+            }
+
+            const newRows = self.rows.concat();
             newRows.splice(fromIndex, 1);
             newRows.splice(toIndex, 0, item);
 
+            newRows.forEach((item, index) => (item.newIndex = index));
             self.rows.replace(newRows);
         }
 
         function persistSaveToggledColumns() {
-            const key = location.pathname + self.path + self.toggableColumns.map(item => item.name || item.index).join('-');
+            const key =
+                location.pathname + self.path + self.toggableColumns.map(item => item.name || item.index).join('-');
             localStorage.setItem(key, JSON.stringify(self.activeToggaleColumns.map(item => item.index)));
         }
 
@@ -660,6 +736,7 @@ export const TableStore = iRendererStore
             toggle,
             toggleExpandAll,
             toggleExpanded,
+            collapseAllAtDepth,
             clear,
             setOrderByInfo,
             reset,
@@ -672,7 +749,10 @@ export const TableStore = iRendererStore
             // events
             afterAttach() {
                 setTimeout(() => {
-                    const key = location.pathname + self.path + self.toggableColumns.map(item => item.name || item.index).join('-');
+                    const key =
+                        location.pathname +
+                        self.path +
+                        self.toggableColumns.map(item => item.name || item.index).join('-');
                     const data = localStorage.getItem(key);
 
                     if (data) {

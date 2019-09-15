@@ -339,3 +339,12 @@ template {
 [hidden] {
     display: none;
 }
+
+
+svg.icon {
+    width: 1em;
+    height: 1em;
+    top: 0.125em;
+    position: relative;
+    fill: currentColor;
+}

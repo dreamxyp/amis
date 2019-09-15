@@ -1,12 +1,21 @@
 .#{$ns}Tabs {
     &-links {
         border-bottom: $Tabs-borderWidth solid $Tabs-borderColor;
+        padding-left: 0;
+        margin-bottom: 0;
+        list-style: none;
+
+        &::before {
+            display: table;
+            content: ' ';
+        }
 
         > .#{$ns}Tabs-link {
             margin-bottom: -$Tabs-borderWidth;
             display: inline-block;
+            position: relative;
 
-            > a {
+            > a:first-child {
                 font-size: $Tabs-linkFontSize;
                 outline: none;
                 border: $Tabs-borderWidth solid transparent;
@@ -14,27 +23,41 @@
                 border-top-right-radius: $Tabs-borderRadius;
                 color: $Tabs-color;
                 margin-right: px2rem(2px);
-                padding: $gap-sm $gap-base;
+                padding: $Tabs-link-padding;
+                margin: $Tabs-link-margin;
                 text-decoration: none;
                 cursor: pointer;
+                display: block;
             }
 
-            &:hover > a,
-            > a:focus {
+            > .#{$ns}Combo-toolbarBtn {
+                position: absolute;
+                right: -10px;
+                top: -10px;
+                z-index: 10;
+                display: none;
+            }
+
+            &:hover > .#{$ns}Combo-toolbarBtn {
+                display: block;
+            }
+
+            &:hover > a:first-child,
+            > a:first-child:focus {
                 border-color: $Tabs-onHover-borderColor;
                 text-decoration: none;
             }
 
-            &.disabled > a,
-            &.is-disabled > a {
+            &.disabled > a:first-child,
+            &.is-disabled > a:first-child {
                 color: $Tabs-onDisabled-color;
                 background-color: transparent;
                 border-color: transparent;
                 pointer-events: none;
             }
 
-            &.active > a,
-            &.is-active > a {
+            &.active > a:first-child,
+            &.is-active > a:first-child {
                 color: $Tabs-onActive-color;
                 background-color: $Tabs-onActive-bg;
                 border-color: $Tabs-onActive-borderColor;
@@ -45,10 +68,24 @@
 
     &-content {
         background-color: $Tabs-content-bg;
-        padding: $gap-base;
+        padding: $Tabs-content-padding;
         border-style: solid;
-        border-width: 0 $Tabs-borderWidth $Tabs-borderWidth;
+        border-width: $Tabs-content-borderWidth;
         border-color: $Tabs-borderColor;
+    }
+
+    &-pane {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.35s linear;
+
+        &.is-active {
+            display: block;
+        }
+
+        &.in {
+            opacity: 1;
+        }
     }
 
     &--line {
@@ -56,24 +93,23 @@
             border-bottom-color: #e2e5ec;
 
             > li {
-                &.active {
-                    > a,
-                    > a:hover,
-                    > a:focus {
-                        border-bottom: px2rem(2px) solid $primary;
+                &.is-active {
+                    > a:first-child,
+                    > a:first-child:hover,
+                    > a:first-child:focus {
+                        border-color: $primary;
                         color: $primary;
-                        background-color: transparent;
-                        border-color: transparent transparent $primary
-                            transparent;
                     }
                 }
 
-                > a,
-                > a:hover,
-                > a:focus {
+                > a:first-child,
+                > a:first-child:hover,
+                > a:first-child:focus {
                     color: #666;
                     background-color: transparent;
                     border-color: transparent;
+                    border-style: solid;
+                    border-width: 0 0 px2rem(2px) 0;
                 }
             }
         }
@@ -81,23 +117,23 @@
 
     &--card {
         > .#{$ns}Tabs-links {
-            background-color: #eceff8;
-            border-top: px2rem(1px) solid #e2e5ec;
+            background-color: $Tabs--card-bg;
+            border-top: px2rem(1px) solid $Tabs--card-borderTopColor;
 
             > li {
-                &.active {
-                    > a,
-                    > a:hover,
-                    > a:focus {
+                &.is-active {
+                    > a:first-child,
+                    > a:first-child:hover,
+                    > a:first-child:focus {
                         color: $primary;
-                        background-color: #fff;
+                        background-color: $Tabs--card-onActive-bg;
                         margin-left: px2rem(1px);
                     }
                 }
 
-                > a,
-                > a:hover,
-                > a:focus {
+                > a:first-child,
+                > a:first-child:hover,
+                > a:first-child:focus {
                     color: #666;
                     background-color: transparent;
                 }
@@ -111,7 +147,7 @@
             margin-bottom: px2rem(10px);
 
             > li {
-                > a {
+                > a:first-child {
                     font-size: $fontSizeSm;
                     text-align: center;
                     margin-right: 0;
@@ -120,26 +156,26 @@
                     line-height: px2rem(30px);
                 }
 
-                &.active {
-                    > a,
-                    > a:hover,
-                    > a:focus {
+                &.is-active {
+                    > a:first-child,
+                    > a:first-child:hover,
+                    > a:first-child:focus {
                         color: #fff;
                         background-color: $primary;
                         margin-left: px2rem(1px);
                     }
                 }
 
-                > a,
-                > a:hover,
-                > a:focus {
+                > a:first-child,
+                > a:first-child:hover,
+                > a:first-child:focus {
                     color: $primary;
-                    background-color: #eaf6fe;
+                    background-color: $Tabs--radio-bg;
                 }
             }
         }
 
-        .tab-content {
+        > .#{$ns}Tabs-content {
             border-top: $Tabs-borderWidth solid $Tabs-borderColor;
         }
     }

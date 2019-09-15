@@ -238,6 +238,10 @@
     font-size: 2em;
 }
 
+.text-xl {
+    font-size: $fontSizeXl;
+}
+
 .text-lg {
     font-size: $fontSizeLg;
 }
@@ -1389,6 +1393,10 @@
     position: absolute !important;
     clip: rect(1px 1px 1px 1px);
     clip: rect(1px, 1px, 1px, 1px);
+}
+
+.invisible2 {
+    visibility: hidden;
 }
 
 .hbox {

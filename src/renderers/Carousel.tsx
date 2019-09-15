@@ -2,8 +2,8 @@ import React from 'react';
 import Transition, {ENTERED, ENTERING, EXITING} from 'react-transition-group/Transition';
 import {Renderer, RendererProps} from '../factory';
 import {resolveVariable} from '../utils/tpl-builtin';
-import {autobind, createObject, isObject} from '../utils/helper';
-import {leftArrowIcon, rightArrowIcon} from '../components/icons';
+import {autobind, createObject, isObject, isArrayChilrenModified} from '../utils/helper';
+import {Icon} from '../components/icons';
 
 const animationStyles: {
     [propName: string]: string;
@@ -88,16 +88,27 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
         nextAnimation: ''
     };
 
+    componentWillReceiveProps(nextProps: CarouselProps) {
+        const currentOptions = this.state.options;
+        const nextOptions =
+            nextProps.value || nextProps.options || resolveVariable(nextProps.name, nextProps.data) || [];
+        if (isArrayChilrenModified(currentOptions, nextOptions)) {
+            this.setState({
+                options: nextOptions
+            });
+        }
+    }
+
     componentDidMount() {
         this.prepareAutoSlide();
     }
 
     componentWillUnmount() {
-        this.clearAutoTimeout()
+        this.clearAutoTimeout();
     }
 
     @autobind
-    prepareAutoSlide () {
+    prepareAutoSlide() {
         if (this.state.options.length < 2) {
             return;
         }
@@ -109,14 +120,14 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
     }
 
     @autobind
-    autoSlide (rel?:string) {
+    autoSlide(rel?: string) {
         this.clearAutoTimeout();
         const {animation} = this.props;
         let {nextAnimation} = this.state;
 
         switch (rel) {
             case 'prev':
-                animation === 'slide' ? nextAnimation = 'slideRight' : nextAnimation = '';
+                animation === 'slide' ? (nextAnimation = 'slideRight') : (nextAnimation = '');
                 this.transitFramesTowards('right', nextAnimation);
                 break;
             case 'next':
@@ -130,7 +141,7 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
     }
 
     @autobind
-    transitFramesTowards (direction:string, nextAnimation: string) {
+    transitFramesTowards(direction: string, nextAnimation: string) {
         let {current} = this.state;
 
         switch (direction) {
@@ -149,7 +160,7 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
     }
 
     @autobind
-    getFrameId (pos?:string) {
+    getFrameId(pos?: string) {
         const {options, current} = this.state;
         const total = options.length;
         switch (pos) {
@@ -163,17 +174,17 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
     }
 
     @autobind
-    next () {
+    next() {
         this.autoSlide('next');
     }
 
     @autobind
-    prev () {
+    prev() {
         this.autoSlide('prev');
     }
 
     @autobind
-    clearAutoTimeout () {
+    clearAutoTimeout() {
         clearTimeout(this.intervalTimeout);
         clearTimeout(this.durationTimeout);
     }
@@ -187,11 +198,11 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
                 onMouseEnter={this.handleMouseEnter}
                 onMouseLeave={this.handleMouseLeave}
             >
-                {Array.from({length: options.length}).map((_, i) =>
-                    <span key={i} className={cx('Carousel-dot', current === i ? 'is-active' : '')}></span>
-                )}
+                {Array.from({length: options.length}).map((_, i) => (
+                    <span key={i} className={cx('Carousel-dot', current === i ? 'is-active' : '')} />
+                ))}
             </div>
-        )
+        );
     }
 
     renderArrows() {
@@ -202,10 +213,14 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
                 onMouseEnter={this.handleMouseEnter}
                 onMouseLeave={this.handleMouseLeave}
             >
-                <div className={cx('Carousel-leftArrow')} onClick={this.prev}>{leftArrowIcon}</div>
-                <div className={cx('Carousel-rightArrow')} onClick={this.next}>{rightArrowIcon}</div>
+                <div className={cx('Carousel-leftArrow')} onClick={this.prev}>
+                    <Icon icon="left-arrow" className="icon" />
+                </div>
+                <div className={cx('Carousel-rightArrow')} onClick={this.next}>
+                    <Icon icon="right-arrow" className="icon" />
+                </div>
             </div>
-        )
+        );
     }
 
     @autobind
@@ -239,19 +254,14 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
             data,
             name
         } = this.props;
-        const {
-            options,
-            showArrows,
-            current,
-            nextAnimation
-        } = this.state;
-        
-        let body:JSX.Element | null = null;
+        const {options, showArrows, current, nextAnimation} = this.state;
+
+        let body: JSX.Element | null = null;
         let carouselStyles: {
             [propName: string]: string;
         } = {};
-        width ? carouselStyles.width = width + 'px' : '';
-        height ? carouselStyles.height = height + 'px' : '';
+        width ? (carouselStyles.width = width + 'px') : '';
+        height ? (carouselStyles.height = height + 'px') : '';
         const [dots, arrows] = [controls.indexOf('dots') > -1, controls.indexOf('arrows') > -1];
         const animationName = nextAnimation || animation;
 
@@ -262,24 +272,24 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
                     className={cx('Carousel-container')}
                     onMouseEnter={this.handleMouseEnter}
                     onMouseLeave={this.handleMouseLeave}
-                    >
-                    {options.map((option:any, key:number) => (
-                        <Transition
-                            mountOnEnter
-                            unmountOnExit
-                            in={key === current}
-                            timeout={500}
-                            key={key}
-                        >
-                            {(status:string) => {
+                >
+                    {options.map((option: any, key: number) => (
+                        <Transition mountOnEnter unmountOnExit in={key === current} timeout={500} key={key}>
+                            {(status: string) => {
                                 if (status === ENTERING) {
-                                    this.wrapperRef.current && this.wrapperRef.current.childNodes.forEach((item:HTMLElement) => item.offsetHeight);
+                                    this.wrapperRef.current &&
+                                        this.wrapperRef.current.childNodes.forEach(
+                                            (item: HTMLElement) => item.offsetHeight
+                                        );
                                 }
 
                                 return (
                                     <div className={cx('Carousel-item', animationName, animationStyles[status])}>
                                         {render(`${current}/body`, itemSchema ? itemSchema : defaultSchema, {
-                                            data: createObject(data, isObject(option) ? option : {item: option, [name]: option})
+                                            data: createObject(
+                                                data,
+                                                isObject(option) ? option : {item: option, [name]: option}
+                                            )
                                         })}
                                     </div>
                                 );
@@ -302,6 +312,6 @@ export class Carousel extends React.Component<CarouselProps, CarouselState> {
 
 @Renderer({
     test: /(^|\/)carousel/,
-    name: 'carousel',
+    name: 'carousel'
 })
 export class CarouselRenderer extends Carousel {}

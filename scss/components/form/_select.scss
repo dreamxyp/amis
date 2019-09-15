@@ -16,7 +16,7 @@
     cursor: pointer;
     color: $Form-select-color;
 
-    &:not(.is-disabled):hover {
+    &:hover {
         background: $Form-select-onHover-bg;
         border-color: $Form-select-onHover-borderColor;
 
@@ -43,6 +43,7 @@
     &-placeholder {
         color: $Form-select-placeholderColor;
         line-height: $Form-input-lineHeight;
+        user-select: none;
     }
 
     &-input {
@@ -122,7 +123,7 @@
 
     &-arrow {
         margin-right: $gap-xs;
-        margin-left: $gap-xs;
+        // margin-left: $gap-xs;
         width: px2rem(20px);
         text-align: center;
         display: flex;

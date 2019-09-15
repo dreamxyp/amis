@@ -7,7 +7,7 @@
 import React from 'react';
 import Transition, {ENTERED, ENTERING, EXITING} from 'react-transition-group/Transition';
 import {Portal} from 'react-overlays';
-import {closeIcon} from './icons';
+import {Icon} from './icons';
 import cx from 'classnames';
 import {current, addModal, removeModal} from './ModalManager';
 import {ClassNamesFn, themeable} from '../theme';
@@ -38,20 +38,20 @@ const fadeStyles: {
     [propName: string]: string;
 } = {
     [ENTERING]: 'in',
-    [ENTERED]: 'in',
+    [ENTERED]: 'in'
 };
 export class Drawer extends React.Component<DrawerProps, DrawerState> {
     static defaultProps: Pick<
         DrawerProps,
         'container' | 'position' | 'size' | 'overlay' | 'disableOnClickOutside' | 'enableOnClickOutside'
     > = {
-            container: document.body,
-            position: 'left',
-            size: 'md',
-            overlay: true,
-            disableOnClickOutside: noop,
-            enableOnClickOutside: noop,
-        };
+        container: document.body,
+        position: 'left',
+        size: 'md',
+        overlay: true,
+        disableOnClickOutside: noop,
+        enableOnClickOutside: noop
+    };
 
     contentDom: any;
 
@@ -111,7 +111,7 @@ export class Drawer extends React.Component<DrawerProps, DrawerState> {
             size,
             onHide,
             disabled,
-            overlay,
+            overlay
         } = this.props;
 
         return (
@@ -141,7 +141,7 @@ export class Drawer extends React.Component<DrawerProps, DrawerState> {
                                     {
                                         [`${ns}Drawer--${position}`]: position,
                                         [`${ns}Drawer--${size}`]: size,
-                                        [`${ns}Drawer--noOverlay`]: !overlay,
+                                        [`${ns}Drawer--noOverlay`]: !overlay
                                     },
                                     className
                                 )}
@@ -150,7 +150,7 @@ export class Drawer extends React.Component<DrawerProps, DrawerState> {
                                 {overlay ? <div className={cx(`${ns}Drawer-overlay`, fadeStyles[status])} /> : null}
                                 <div ref={this.contentRef} className={cx(`${ns}Drawer-content`, fadeStyles[status])}>
                                     <a onClick={disabled ? undefined : onHide} className={`${ns}Drawer-close`}>
-                                        {closeIcon}
+                                        <Icon icon="close" className="icon" />
                                     </a>
                                     {children}
                                 </div>

@@ -1,4 +1,5 @@
 // 百度云舍主题：http://console.yunshe.design/docs/index
+// 更新时间: 2019-08-14 14:31:00
 @import "../functions";
 $remFactor: 16px;
 
@@ -17,7 +18,7 @@ $success-bg: #f1fdeb;
 $warning-bg: #fcf7f1;
 $danger-bg: #fff5f5;
 
-$body-bg: #e8ecf0;
+$body-bg: #ffffff;
 $text-color: #666;
 $text--muted-color: #999;
 $text--loud-color: #333;
@@ -26,28 +27,37 @@ $borderColor: #e8ebee;
 $link-onHover-decoration: none;
 
 $Layout-header-boxShadow: none;
+$Layout-header-bg: #F5F5F5;
 $Layout-aside-width: px2rem(180px);
-$Layout-aside-bg: #19233c;
-$Layout-brand-bg: #121a2c;
+$Layout-aside-bg: #1E1E28;
+$Layout-brand-bg: #0F1012;
 $Layout-brand-color: #fff;
+$Layout-asideLink-iconColor: rgba(255, 255, 255, 0.6);
 $Layout-asideLink-color: #fff;
 $Layout-asideLink-onHover-iconSize: px2rem(16px);
-$Layout-asideLink-onHover-iconColor: #42aafa;
+$Layout-asideLink-onHover-iconColor: #108cee;
 $Layout-asideLink-fontSize: px2rem(12px);
 $Layout-asideLink-arrowFontSize: px2rem(12px);
 $Layout-asideLink-arrowVendor: "iconfont";
 $Layout-asideLink-arrowIcon: "\e63b";
 $Layout-asideLink-arrowColor: #8d99b0;
 $Layout-asideLink-onHover-arrowColor: #fff;
-$Layout-headerBar-borderBottom: px2rem(1px) solid $body-bg;
+$Layout-headerBar-borderBottom: 0 none;
 $Layout-asideDivider-margin: 0 px2rem(10px);
+$Layout-asideDivider-bg: #3c3c4d;
+$Layout-nav--folded-height: px2rem(40px);
 
 $Page-aside-bg: #ffffff;
 $Page-aside-width: px2rem(160px);
-$Page-content-paddingY: px2rem(20px);
-$Page-content-paddingX: px2rem(20px);
+$Page-content-paddingY: 0;
+$Page-content-paddingX: 0;
 $Page-main-bg: #fff;
-$Page-header-paddingY: px2rem(18px);
+$Page-body-padding: px2rem(20px);
+$Page-title-fontSize: px2rem(16px);
+$Page-title-color: #000;
+$Page-title-lineHeight: 1.75;
+$Page-header-paddingX: px2rem(20px);
+$Page-header-paddingY: px2rem(10px);
 
 $Form-item-gap: px2rem(20px);
 $Form-input-height: px2rem(30px);
@@ -201,9 +211,9 @@ $Button--primary-border: $primary;
 $Button--primary-onHover-bg: #209bfd;
 $Button--primary-onHover-border: $primary;
 $Button--primary-onHover-color: $white;
-$Button--primary-onActive-bg: $white;
+$Button--primary-onActive-bg: #047bdb;
 $Button--primary-onActive-border: $primary;
-$Button--primary-onActive-color: $primary;
+$Button--primary-onActive-color: $white;
 
 $Button--danger-bg: #ea2e2e;
 $Button--danger-onHover-bg: #f64545;
@@ -211,6 +221,8 @@ $Button--danger-onActive-bg: #d72b2b;
 
 $ButtonGroup-divider-width: px2rem(1px);
 $ButtonGroup-divider-color: #fff;
+$ButtonGroup--primary-isActive-color: $primary;
+$ButtonGroup--primary-isActive-bg: $white;
 
 $Button--link-color: $primary;
 $Button--link-onHover-color: #209bfd;
@@ -225,8 +237,8 @@ $Table-fontSize: px2rem(12px);
 $Table-color: #333;
 $Table-thead-color: #333;
 $Table-lineHeight: 20 / 12;
-$Table-borderColor: #eceff8;
-$Table-thead-bg: #f6f7fb;
+$Table-borderColor: #F5F5F5;
+$Table-thead-bg: #F5F5F5;
 $Table-thead-borderColor: #fff;
 $Table-thead-iconColor: #999;
 $Table-strip-bg: transparent;
@@ -322,13 +334,19 @@ $Wizard-badge-bg: $white;
 $Wizard-badge-marginRight: px2rem(6px);
 
 // Tabs
-$Tabs-linkFontSize: px2rem(16px);
+$Tabs-linkFontSize: px2rem(14px);
 $Tabs-color: $text-color;
 $Tabs-onActive-color: $info;
 $Tabs-onActive-borderColor: transparent;
 $Tabs-onHover-borderColor: transparent;
 $Tabs-onActive-borderBottomColor: $info;
 $Tabs-onActive-borderBottomWidth: px2rem(2px);
+$Tabs-content-borderWidth: 0;
+$Tabs-borderRadius: 0;
+$Tabs-content-padding: px2rem(10px) 0 0;
+$Tabs-link-padding: px2rem(10px) 0;
+$Tabs-link-margin: 0 px2rem(40px) 0 0;
+
 
 // Pagination
 $Pagination-arrowVendor: "iconfont";
@@ -341,6 +359,7 @@ $Pagination-onActive-border: px2rem(1px) solid $primary;
 
 // Panel
 $Panel-borderRadius: 0;
+$Panel-fixedBottom-boxShadow: 0 -2px 10px 0 rgba(0,0,0,0.05);
 
 // Nav
 $Nav-item-fontSize: px2rem(16px);

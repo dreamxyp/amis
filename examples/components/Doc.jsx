@@ -437,6 +437,13 @@ export default {
                     }),
                 },
                 {
+                    label: 'Each',
+                    path: '/docs/renderers/Each',
+                    getComponent: (location, cb) => require(['../../docs/renderers/Each.md'], (doc) => {
+                        cb(null, makeMarkdownRenderer(doc));
+                    }),
+                },
+                {
                     label: 'Tpl',
                     path: '/docs/renderers/Tpl',
                     getComponent: (location, cb) => require(['../../docs/renderers/Tpl.md'], (doc) => {
@@ -586,6 +593,13 @@ export default {
                             getComponent: (location, cb) => require(['../../docs/renderers/Column.md'], (doc) => {
                                 cb(null, makeMarkdownRenderer(doc));
                             }),
+                        },
+                        {
+                            label: 'Operation',
+                            path: '/docs/renderers/Operation',
+                            getComponent: (location, cb) => require(['../../docs/renderers/Operation.md'], (doc) => {
+                                cb(null, makeMarkdownRenderer(doc));
+                            })
                         },
                     ]
                 },

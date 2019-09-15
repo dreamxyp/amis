@@ -1,7 +1,6 @@
 import React from 'react';
 import {Renderer, RendererProps} from '../factory';
-import cx from 'classnames';
-import {Collapse as BasicCollapse} from 'react-bootstrap';
+import {Collapse as BasicCollapse} from '../components/Collapse';
 
 export interface CollapseProps extends RendererProps {
     title?: string; // 标题
@@ -25,7 +24,7 @@ export default class Collapse extends React.Component<CollapseProps, CollapseSta
         'headingComponent',
         'bodyClassName',
         'collapsed',
-        'headingClassName',
+        'headingClassName'
     ];
 
     static defaultProps: Partial<CollapseProps> = {
@@ -34,11 +33,11 @@ export default class Collapse extends React.Component<CollapseProps, CollapseSta
         className: '',
         headingClassName: '',
         bodyClassName: '',
-        collapsable: true,
+        collapsable: true
     };
 
     state = {
-        collapsed: false,
+        collapsed: false
     };
 
     constructor(props: CollapseProps) {
@@ -53,15 +52,16 @@ export default class Collapse extends React.Component<CollapseProps, CollapseSta
 
         if (props.collapsed !== nextProps.collapsed) {
             this.setState({
-                collapsed: !!nextProps.collapsed,
+                collapsed: !!nextProps.collapsed
             });
         }
     }
 
     toggleCollapsed() {
-        this.props.collapsable !== false && this.setState({
-            collapsed: !this.state.collapsed,
-        });
+        this.props.collapsable !== false &&
+            this.setState({
+                collapsed: !this.state.collapsed
+            });
     }
 
     render() {
@@ -78,10 +78,8 @@ export default class Collapse extends React.Component<CollapseProps, CollapseSta
             body,
             bodyClassName,
             render,
-            collapsable,
+            collapsable
         } = this.props;
-
-        // todo 换掉 bootstrap 的 collapse
 
         return (
             <WrapperComponent
@@ -90,19 +88,22 @@ export default class Collapse extends React.Component<CollapseProps, CollapseSta
                     {
                         'is-collapsed': this.state.collapsed,
                         [`Collapse--${size}`]: size,
-                        'Collapse--collapsable': collapsable,
+                        'Collapse--collapsable': collapsable
                     },
                     className
                 )}
             >
                 {title ? (
-                    <HeadingComponent onClick={this.toggleCollapsed} className={cx(`Collapse-header`, headingClassName)}>
+                    <HeadingComponent
+                        onClick={this.toggleCollapsed}
+                        className={cx(`Collapse-header`, headingClassName)}
+                    >
                         {render('heading', title)}
                         {collapsable && <span className={cx('Collapse-arrow')} />}
                     </HeadingComponent>
                 ) : null}
 
-                <BasicCollapse in={collapsable ? !this.state.collapsed : true}>
+                <BasicCollapse show={collapsable ? !this.state.collapsed : true} classnames={cx} classPrefix={ns}>
                     <div className={cx(`Collapse-body`, bodyClassName)}>
                         {children
                             ? typeof children === 'function'
@@ -120,6 +121,6 @@ export default class Collapse extends React.Component<CollapseProps, CollapseSta
 
 @Renderer({
     test: /(^|\/)collapse$/,
-    name: 'collapse',
+    name: 'collapse'
 })
 export class CollapseRenderer extends Collapse {}

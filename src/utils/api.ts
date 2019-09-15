@@ -1,25 +1,11 @@
-import {
-    Api,
-    ApiObject,
-    fetcherResult,
-    Payload
-} from '../types';
-import {
-    fetcherConfig
-} from '../factory';
-import {
-    tokenize,
-    dataMapping
-} from './tpl-builtin';
-const rSchema = /(?:^|raw\:)(get|post|put|delete|patch):/i;
+import {Api, ApiObject, fetcherResult, Payload} from '../types';
+import {fetcherConfig} from '../factory';
+import {tokenize, dataMapping} from './tpl-builtin';
 import qs from 'qs';
-import { evalExpression } from './tpl';
-import {
-    isObject,
-    isObjectShallowModified,
-    hasFile,
-    object2formData
-} from './helper';
+import {evalExpression} from './tpl';
+import {isObject, isObjectShallowModified, hasFile, object2formData} from './helper';
+
+const rSchema = /(?:^|raw\:)(get|post|put|delete|patch|options|head):/i;
 
 interface ApiCacheConfig extends ApiObject {
     cachedPromise: Promise<any>;
@@ -28,11 +14,15 @@ interface ApiCacheConfig extends ApiObject {
 
 const apiCaches: Array<ApiCacheConfig> = [];
 
-export function buildApi(api: Api, data?: object, options: {
-    autoAppend?: boolean;
-    ignoreData?: boolean;
-    [propName: string]: any;
-} = {}): ApiObject {
+export function buildApi(
+    api: Api,
+    data?: object,
+    options: {
+        autoAppend?: boolean;
+        ignoreData?: boolean;
+        [propName: string]: any;
+    } = {}
+): ApiObject {
     if (typeof api === 'string') {
         let method = rSchema.test(api) ? RegExp.$1 : '';
         method && (api = api.replace(method + ':', ''));
@@ -46,11 +36,7 @@ export function buildApi(api: Api, data?: object, options: {
             ...api
         };
     }
-    const {
-        autoAppend,
-        ignoreData,
-        ...rest
-    } = options;
+    const {autoAppend, ignoreData, ...rest} = options;
 
     api.config = {
         ...rest
@@ -64,7 +50,7 @@ export function buildApi(api: Api, data?: object, options: {
         return api;
     }
 
-    const raw = api.url = api.url || '';
+    const raw = (api.url = api.url || '');
     api.url = tokenize(api.url, data, '| url_encode');
 
     if (ignoreData) {
@@ -113,7 +99,7 @@ export function buildApi(api: Api, data?: object, options: {
     return api;
 }
 
-function  str2function(contents:string, ...args:Array<string>):Function | null {
+function str2function(contents: string, ...args: Array<string>): Function | null {
     try {
         let fn = new Function(...args, contents);
         return fn;
@@ -128,7 +114,10 @@ function responseAdaptor(ret: fetcherResult) {
 
     if (!data) {
         throw new Error('Response is empty!');
+    } else if (!data.hasOwnProperty('status')) {
+        throw new Error('接口返回格式不符合，请参考 http://amis.baidu.com/v2/docs/api');
     }
+
     const payload: Payload = {
         ok: data.status == 0,
         status: data.status,
@@ -143,8 +132,10 @@ function responseAdaptor(ret: fetcherResult) {
     return payload;
 }
 
-export function wrapFetcher(fn: (config: fetcherConfig) => Promise<fetcherResult>): (api: Api, data: object, options?: object) => Promise<Payload | void> {
-    return function (api, data, options) {
+export function wrapFetcher(
+    fn: (config: fetcherConfig) => Promise<fetcherResult>
+): (api: Api, data: object, options?: object) => Promise<Payload | void> {
+    return function(api, data, options) {
         api = buildApi(api, data, options) as ApiObject;
 
         if (api.data && (hasFile(api.data) || api.dataType === 'form-data')) {
@@ -158,25 +149,34 @@ export function wrapFetcher(fn: (config: fetcherConfig) => Promise<fetcherResult
             return wrapAdaptor(apiCache ? (apiCache as ApiCacheConfig).cachedPromise : setApiCache(api, fn(api)), api);
         }
         return wrapAdaptor(fn(api), api);
-    }
+    };
 }
 
 export function wrapAdaptor(promise: Promise<fetcherResult>, api: ApiObject) {
     const adaptor = api.adaptor;
-    return adaptor ? promise.then(response => ({ ...response, data: adaptor((response as any).data, response, api) })).then(responseAdaptor)
+    return adaptor
+        ? promise
+              .then(response => ({...response, data: adaptor((response as any).data, response, api)}))
+              .then(responseAdaptor)
         : promise.then(responseAdaptor);
 }
 
-export function isApiOutdated(prevApi: Api | undefined, nextApi: Api | undefined, prevData: any, nextData: any): boolean {
-    const url: string = nextApi && (nextApi as ApiObject).url || nextApi as string;
+export function isApiOutdated(
+    prevApi: Api | undefined,
+    nextApi: Api | undefined,
+    prevData: any,
+    nextData: any
+): boolean {
+    const url: string = (nextApi && (nextApi as ApiObject).url) || (nextApi as string);
 
-    if (url && typeof url === "string" && ~url.indexOf('$')) {
-        prevApi = buildApi(prevApi as Api, prevData as object, { ignoreData: true });
-        nextApi = buildApi(nextApi as Api, nextData as object, { ignoreData: true });
+    if (url && typeof url === 'string' && ~url.indexOf('$')) {
+        prevApi = buildApi(prevApi as Api, prevData as object, {ignoreData: true});
+        nextApi = buildApi(nextApi as Api, nextData as object, {ignoreData: true});
 
         return !!(
-            prevApi.url !== nextApi.url && isValidApi(nextApi.url)
-            && (!nextApi.sendOn || evalExpression(nextApi.sendOn, nextData))
+            prevApi.url !== nextApi.url &&
+            isValidApi(nextApi.url) &&
+            (!nextApi.sendOn || evalExpression(nextApi.sendOn, nextData))
         );
     }
 
@@ -209,7 +209,9 @@ export function isEffectiveApi(api?: Api, data?: any, initFetch?: boolean, initF
 }
 
 export function isSameApi(apiA: ApiObject | ApiCacheConfig, apiB: ApiObject | ApiCacheConfig): boolean {
-    return apiA.method === apiB.method && apiA.url === apiB.url && !isObjectShallowModified(apiA.data, apiB.data, false);
+    return (
+        apiA.method === apiB.method && apiA.url === apiB.url && !isObjectShallowModified(apiA.data, apiB.data, false)
+    );
 }
 
 export function getApiCache(api: ApiObject): ApiCacheConfig | undefined {

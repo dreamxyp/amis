@@ -1,6 +1,6 @@
 {
   "name": "amis",
-  "version": "1.0.0-rc.9",
+  "version": "1.0.2",
   "description": "一种MIS页面生成工具",
   "main": "lib/index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "stop": "fis3 server stop",
     "dev": "fis3 release -cwd ./public",
     "publish2npm": "sh publish.sh && npm publish",
-    "prettier": "prettier --write src/**/*.tsx"
+    "prettier": "prettier --write 'src/**/*.{tsx,ts}'"
   },
   "repository": {
     "type": "git",
@@ -53,7 +53,6 @@
     "rc-input-number": "4.4.5",
     "react": "^16.8.6",
     "react-addons-update": "15.6.2",
-    "react-bootstrap": "^0.32.3",
     "react-overlays": "^0.8.3",
     "react-color": "2.13.8",
     "react-cropper": "1.0.0",
@@ -69,7 +68,7 @@
     "react-transition-group": "2.2.1",
     "react-visibility-sensor": "3.11.0",
     "setimmediate": "1.0.5",
-    "sortablejs": "1.7.0",
+    "sortablejs": "1.9.0",
     "tslib": "^1.9.3",
     "uncontrollable": "4.1.0",
     "video-react": "0.9.4",
@@ -89,7 +88,6 @@
     "@types/qs": "^6.5.1",
     "@types/react": "^16.8.1",
     "@types/react-addons-update": "^0.14.19",
-    "@types/react-bootstrap": "^0.32.3",
     "@types/react-color": "^2.13.3",
     "@types/react-cropper": "^0.10.1",
     "@types/react-dom": "^16.0.7",
@@ -112,6 +110,7 @@
     "es6-symbol": "3.1.1",
     "faker": "^4.1.0",
     "fis-parser-node-sass": "^1.0.5",
+    "fis-parser-svgr": "^1.0.0",
     "fis3": "^3.4.41",
     "fis3-hook-commonjs": "^0.1.31",
     "fis3-hook-node_modules": "^2.3.1",
